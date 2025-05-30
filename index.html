@@ -20,7 +20,7 @@
             border-radius: 10px;
             box-shadow: 0 0 10px rgba(0,0,0,0.1);
             text-align: center;
-            max-width: 400px;
+            max-width: 500px;  /* Increased from 400px to accommodate instructions */
             width: 100%;
         }
         #current-word {
@@ -82,11 +82,47 @@
             pointer-events: none;
             z-index: 1000;
         }
+        
+        #instructions {
+            text-align: left;
+            margin-bottom: 20px;
+            padding: 15px;
+            background-color: #f8f8f8;
+            border-radius: 5px;
+        }
+        
+        #instructions h3 {
+            margin-top: 0;
+        }
+        
+        #instructions ul {
+            margin: 0;
+            padding-left: 20px;
+        }
+        
+        #instructions ul li {
+            margin-bottom: 8px;
+            color: #444;
+        }
     </style>
 </head>
 <body>
     <div id="game-container">
         <h1>Word Building Game</h1>
+        
+        <!-- Add this new instructions section -->
+        <div id="instructions">
+            <h3>How to Play:</h3>
+            <ul>
+                <li>Players take turns adding one letter at a time</li>
+                <li>Each addition must work towards forming a valid English word</li>
+                <li>If a player adds a letter that can't form a valid word, they lose</li>
+                <li>If a player completes a word with 4 or more letters, they lose</li>
+                <li>Press Enter or click "Add Letter" to submit your move</li>
+            </ul>
+        </div>
+        
+        <!-- Existing elements -->
         <div id="turn-indicator">Player 1's Turn</div>
         <div id="current-word"></div>
         <div id="input-container">

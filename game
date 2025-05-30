@@ -98,10 +98,9 @@
     </div>
     <canvas id="confetti-canvas"></canvas>
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
     <script>
-        // Simple dictionary of valid words (for demonstration)
-        const dictionary = ['cat', 'dog', 'fish', 'bird', 'tree', 'house', 'car', 'book'];
+        // Dictionary of valid words (including 2, 3, and 4+ letter words)
+        const dictionary = ['to', 'bit', 'the', 'fish', 'bird', 'tree', 'house', 'book', 'mouse', 'table', 'chair', 'river'];
 
         let currentWord = '';
         let currentPlayer = 1;
@@ -155,11 +154,25 @@
         }
 
         function checkWord(word) {
-            return dictionary.includes(word.toLowerCase());
+            // Trigger a loss only if the word is 4 or more letters and in the dictionary
+            console.log(`Checking word "${word}", length: ${word.length}`);
+            if (word.length >= 4 && dictionary.includes(word.toLowerCase())) {
+                console.log(`Found valid 4+ letter word: ${word}`);
+                return true;
+            }
+            console.log(`Not a 4+ letter word, continuing game`);
+            return false; // 2 or 3 letter words don't trigger a loss
         }
 
         function isValidPrefix(word) {
-            return dictionary.some(w => w.startsWith(word.toLowerCase()));
+            console.log(`Checking prefix "${word}"`);
+            if (word.length === 1) {
+                console.log('Single letter, valid prefix');
+                return true; // Allow any single letter as a starting point
+            }
+            const isPrefix = dictionary.some(w => w.startsWith(word.toLowerCase()) && (w.length > word.length || dictionary.includes(word.toLowerCase())));
+            console.log(`Is valid prefix: ${isPrefix}`);
+            return isPrefix;
         }
 
         function endGame(message) {
@@ -182,8 +195,10 @@
             }
 
             const newWord = currentWord + letter;
+            console.log(`New word: ${newWord}, Current player: ${currentPlayer}`);
             if (!isValidPrefix(newWord)) {
-                endGame(`Player ${currentPlayer} loses! "${newWord}" cannot form a valid word.`);
+                const winner = currentPlayer === 1 ? 2 : 1;
+                endGame(`Player ${currentPlayer} made an invalid move with "${newWord}". Player ${winner} wins as they did not lose!`);
                 return;
             }
 
@@ -191,7 +206,8 @@
             wordDisplay.textContent = currentWord;
 
             if (checkWord(currentWord)) {
-                endGame(`Player ${currentPlayer} wins! "${currentWord}" is a valid word!`);
+                const winner = currentPlayer === 1 ? 2 : 1;
+                endGame(`Player ${currentPlayer} completed "${currentWord}" (a word with 4+ letters). Player ${winner} wins as they did not lose!`);
                 return;
             }
 

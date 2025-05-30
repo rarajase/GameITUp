@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Word Building Game</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background-color: #f0f0f0;
+            margin: 0;
+            padding: 20px;
+        }
+        #game-container {
+            background-color: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            text-align: center;
+            max-width: 400px;
+            width: 100%;
+        }
+        #current-word {
+            font-size: 24px;
+            margin: 20px 0;
+            min-height: 30px;
+        }
+        #turn-indicator {
+            font-size: 18px;
+            margin-bottom: 20px;
+        }
+        #input-container {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        #letter-input {
+            padding: 10px;
+            font-size: 16px;
+            width: 50px;
+            text-transform: uppercase;
+            text-align: center;
+        }
+        #submit-letter {
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+        }
+        #submit-letter:hover {
+            background-color: #45a049;
+        }
+        #message {
+            font-size: 16px;
+            color: red;
+            min-height: 20px;
+            margin-bottom: 20px;
+        }
+        #restart {
+            display: none;
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            background-color: #008CBA;
+            color: white;
+            border: none;
+            border-radius: 5px;
+        }
+        #restart:hover {
+            background-color: #007399;
+        }
+        canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            pointer-events: none;
+            z-index: 1000;
+        }
+    </style>
+</head>
+<body>
+    <div id="game-container">
+        <h1>Word Building Game</h1>
+        <div id="turn-indicator">Player 1's Turn</div>
+        <div id="current-word"></div>
+        <div id="input-container">
+            <input type="text" id="letter-input" maxlength="1" placeholder="A">
+            <button id="submit-letter">Add Letter</button>
+        </div>
+        <div id="message"></div>
+        <button id="restart">Restart Game</button>
+    </div>
+    <canvas id="confetti-canvas"></canvas>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+    <script>
+        // Simple dictionary of valid words (for demonstration)
+        const dictionary = ['cat', 'dog', 'fish', 'bird', 'tree', 'house', 'car', 'book'];
+
+        let currentWord = '';
+        let currentPlayer = 1;
+        let gameOver = false;
+
+        const wordDisplay = document.getElementById('current-word');
+        const turnIndicator = document.getElementById('turn-indicator');
+        const letterInput = document.getElementById('letter-input');
+        const submitButton = document.getElementById('submit-letter');
+        const messageDisplay = document.getElementById('message');
+        const restartButton = document.getElementById('restart');
+        const canvas = document.getElementById('confetti-canvas');
+        const ctx = canvas.getContext('2d');
+
+        // Set canvas size
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+        // Confetti effect
+        function createConfetti() {
+            const confetti = [];
+            for (let i = 0; i < 100; i++) {
+                confetti.push({
+                    x: Math.random() * canvas.width,
+                    y: Math.random() * canvas.height - canvas.height,
+                    size: Math.random() * 10 + 5,
+                    speed: Math.random() * 5 + 2,
+                    color: `hsl(${Math.random() * 360}, 100%, 50%)`
+                });
+            }
+            return confetti;
+        }
+
+        function animateConfetti() {
+            let confetti = createConfetti();
+            function draw() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                confetti.forEach(c => {
+                    ctx.fillStyle = c.color;
+                    ctx.fillRect(c.x, c.y, c.size, c.size);
+                    c.y += c.speed;
+                    if (c.y > canvas.height) c.y = -c.size;
+                });
+                if (gameOver) requestAnimationFrame(draw);
+            }
+            draw();
+        }
+
+        function updateTurnIndicator() {
+            turnIndicator.textContent = `Player ${currentPlayer}'s Turn`;
+        }
+
+        function checkWord(word) {
+            return dictionary.includes(word.toLowerCase());
+        }
+
+        function isValidPrefix(word) {
+            return dictionary.some(w => w.startsWith(word.toLowerCase()));
+        }
+
+        function endGame(message) {
+            gameOver = true;
+            messageDisplay.textContent = message;
+            submitButton.disabled = true;
+            letterInput.disabled = true;
+            restartButton.style.display = 'block';
+            if (message.includes('wins')) {
+                animateConfetti();
+            }
+        }
+
+        submitButton.addEventListener('click', () => {
+            if (gameOver) return;
+            const letter = letterInput.value.trim().toUpperCase();
+            if (!letter.match(/^[A-Z]$/)) {
+                messageDisplay.textContent = 'Please enter a single letter (A-Z).';
+                return;
+            }
+
+            const newWord = currentWord + letter;
+            if (!isValidPrefix(newWord)) {
+                endGame(`Player ${currentPlayer} loses! "${newWord}" cannot form a valid word.`);
+                return;
+            }
+
+            currentWord = newWord;
+            wordDisplay.textContent = currentWord;
+
+            if (checkWord(currentWord)) {
+                endGame(`Player ${currentPlayer} wins! "${currentWord}" is a valid word!`);
+                return;
+            }
+
+            currentPlayer = currentPlayer === 1 ? 2 : 1;
+            updateTurnIndicator();
+            messageDisplay.textContent = '';
+            letterInput.value = '';
+            letterInput.focus();
+        });
+
+        restartButton.addEventListener('click', () => {
+            currentWord = '';
+            currentPlayer = 1;
+            gameOver = false;
+            wordDisplay.textContent = '';
+            messageDisplay.textContent = '';
+            submitButton.disabled = false;
+            letterInput.disabled = false;
+            restartButton.style.display = 'none';
+            updateTurnIndicator();
+            letterInput.focus();
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+        });
+
+        letterInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                submitButton.click();
+            }
+        });
+
+        // Initialize game
+        updateTurnIndicator();
+        letterInput.focus();
+    </script>
+</body>
+</html>
